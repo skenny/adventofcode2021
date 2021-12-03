@@ -5,17 +5,17 @@ use std::io::prelude::*;
 pub fn run() {
     println!("AOC 2021 - Day 2");
 
-    //let sample_input = read_input("input/day2-sample.txt");
-    //let real_input = read_input("input/day2.txt");
+    let sample_input = read_input("input/day2-sample.txt");
+    let real_input = read_input("input/day2.txt");
 
-    println!("sample 1 = {}", part1(read_input("input/day2-sample.txt")));
-    println!("part 1 = {}", part1(read_input("input/day2.txt")));
+    println!("sample 1 = {}", part1(&sample_input));
+    println!("part 1 = {}", part1(&real_input));
 
-    println!("sample 2 = {}", part2(read_input("input/day2-sample.txt")));
-    println!("part 2 = {}", part2(read_input("input/day2.txt")));
+    println!("sample 2 = {}", part2(&sample_input));
+    println!("part 2 = {}", part2(&real_input));
 }
 
-fn part1(input: Vec<String>) -> i32 {
+fn part1(input: &[String]) -> i32 {
     let mut x = 0;
     let mut depth = 0;
 
@@ -37,7 +37,7 @@ fn part1(input: Vec<String>) -> i32 {
     x * depth
 }
 
-fn part2(input: Vec<String>) -> i32 {
+fn part2(input: &[String]) -> i32 {
     let mut x = 0;
     let mut aim = 0;
     let mut depth = 0;
