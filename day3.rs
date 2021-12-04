@@ -11,8 +11,8 @@ pub fn run() {
     println!("sample 1 = {}", part1(&sample_input));
     println!("part 1 = {}", part1(&real_input));
 
-    //println!("sample 2 = {}", part2(&sample_input));
-    //println!("part 2 = {}", part2(&real_input));
+    println!("sample 2 = {}", part2(&sample_input));
+    println!("part 2 = {}", part2(&real_input));
 }
 
 fn part1(input: &[String]) -> i32 {
@@ -20,12 +20,10 @@ fn part1(input: &[String]) -> i32 {
     let mut epsilon = String::new();
 
     let num_bits = input[0].len();
-    for i in 0..num_bits {
-        let bit_count = count_bits(i, &input);
-        let zeroes = bit_count.0;
-        let ones = bit_count.1;
-        gamma.push(if zeroes > ones { '0' } else { '1' });
-        epsilon.push(if zeroes < ones { '0' } else { '1' });
+    for bit_pos in 0..num_bits {
+        let bit_count = count_bits(bit_pos, &input);
+        gamma.push(if bit_count.0 > bit_count.1 { '0' } else { '1' });
+        epsilon.push(if bit_count.0 < bit_count.1 { '0' } else { '1' });
     }
 
     let gamma_int = i32::from_str_radix(&gamma, 2).unwrap();
@@ -34,8 +32,38 @@ fn part1(input: &[String]) -> i32 {
     gamma_int * epsilon_int
 }
 
-fn part2(input: &[String]) -> i32 {
-    0
+fn part2(input: &[String]) -> i64 {
+    let mut oxygen_generator_rating_matches: Vec<String> = input.to_vec();
+    let mut co2_scrubber_rating_matches: Vec<String> = input.to_vec();
+
+    let num_bits = input[0].len();
+    for bit_pos in 0..num_bits {
+        if oxygen_generator_rating_matches.len() > 1 {
+            let bit_counts = count_bits(bit_pos, &oxygen_generator_rating_matches);
+            if bit_counts.0 > bit_counts.1 {
+                oxygen_generator_rating_matches.retain(|l| l.chars().nth(bit_pos).unwrap() == '0');
+            } else {
+                oxygen_generator_rating_matches.retain(|l| l.chars().nth(bit_pos).unwrap() == '1');
+            }
+        }
+
+        if co2_scrubber_rating_matches.len() > 1 {
+            let bit_counts = count_bits(bit_pos, &co2_scrubber_rating_matches);
+            if bit_counts.0 > bit_counts.1 {
+                co2_scrubber_rating_matches.retain(|l| l.chars().nth(bit_pos).unwrap() == '1');
+            } else {
+                co2_scrubber_rating_matches.retain(|l| l.chars().nth(bit_pos).unwrap() == '0');
+            }
+        }
+    }
+
+    assert_eq!(1, oxygen_generator_rating_matches.len());
+    assert_eq!(1, co2_scrubber_rating_matches.len());
+
+    let oxygen_generator_rating = i64::from_str_radix(&oxygen_generator_rating_matches[0], 2).unwrap();
+    let co2_scrubber_rating = i64::from_str_radix(&co2_scrubber_rating_matches[0], 2).unwrap();
+
+    oxygen_generator_rating * co2_scrubber_rating
 }
 
 fn count_bits(bit_pos: usize, inputs: &[String]) -> (i32, i32) {
