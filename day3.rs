@@ -21,18 +21,9 @@ fn part1(input: &[String]) -> i32 {
 
     let num_bits = input[0].len();
     for i in 0..num_bits {
-        let mut zeroes = 0;
-        let mut ones = 0;
-
-        for input_line in input {
-            let chars: Vec<char> = input_line.chars().collect();
-            if chars[i] == '0' {
-                zeroes += 1;
-            } else {
-                ones += 1;
-            }
-        }
-
+        let bit_count = count_bits(i, &input);
+        let zeroes = bit_count.0;
+        let ones = bit_count.1;
         gamma.push(if zeroes > ones { '0' } else { '1' });
         epsilon.push(if zeroes < ones { '0' } else { '1' });
     }
@@ -45,6 +36,22 @@ fn part1(input: &[String]) -> i32 {
 
 fn part2(input: &[String]) -> i32 {
     0
+}
+
+fn count_bits(bit_pos: usize, inputs: &[String]) -> (i32, i32) {
+    let mut zeroes = 0;
+    let mut ones = 0;
+
+    for input in inputs {
+        let chars: Vec<char> = input.chars().collect();
+        if chars[bit_pos] == '0' {
+            zeroes += 1;
+        } else {
+            ones += 1;
+        }
+    }
+
+    (zeroes, ones)
 }
 
 fn read_input(filename: &str) -> Vec<String> {
