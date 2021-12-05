@@ -37,14 +37,12 @@ impl BingoCard {
         for y in 0..5 {
             let mut winner = true;
             for x in 0..5 {
-                //println!("({}, {}) is {:?}", y, x, self.grid[y][x]);
                 winner = winner && self.is_called(y, x);
             }
             if winner {
                 self.winner = true;
             }
         }
-        
         for x in 0..5 {
             let mut winner = true;
             for y in 0..5 {
@@ -54,7 +52,6 @@ impl BingoCard {
                 self.winner = true;
             }
         }
-
         self.winner
     }
 
