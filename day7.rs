@@ -41,9 +41,7 @@ fn part2(input: &[String]) -> i64 {
     for pos_candidate in 0..=*max_pos {
         for pos in &positions {
             let mut diff = i64::abs(pos - pos_candidate);
-            for i in 0..diff {
-                diff += i;
-            }
+            diff = (diff * (diff + 1)) / 2;
             let cur_total = position_moves.get_mut(pos_candidate as usize).unwrap();
             *cur_total += diff;
         }
