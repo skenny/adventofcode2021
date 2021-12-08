@@ -1,12 +1,10 @@
-use std::fs::File;
-use std::io::BufReader;
-use std::io::prelude::*;
+use crate::aoc;
 
 pub fn run() {
     println!("AOC 2021 - Day 8");
 
-    let sample_input = read_input("input/day8-sample.txt");
-    let real_input = read_input("input/day8.txt");
+    let sample_input = aoc::read_input("input/day8-sample.txt");
+    let real_input = aoc::read_input("input/day8.txt");
 
     println!("sample 1 = {}", part1(&sample_input));
     println!("part 1 = {}", part1(&real_input));
@@ -30,18 +28,4 @@ fn part1(input: &[String]) -> usize {
 
 fn part2(input: &[String]) -> i64 {
     0
-}
-
-fn read_input(filename: &str) -> Vec<String> {
-    let mut v = Vec::new();
-    let file = File::open(filename).expect("cannot find file!");
-    let reader = BufReader::new(file);
-
-    // very inefficient, creates a new String for each line in the file
-    // tutorial has better examples of how to read lines from a file more efficiently
-    for line in reader.lines() {
-        v.push(line.unwrap());
-    }
-
-    v
 }

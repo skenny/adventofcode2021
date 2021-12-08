@@ -1,3 +1,4 @@
+mod aoc;
 mod day8;
 
 fn main() {
