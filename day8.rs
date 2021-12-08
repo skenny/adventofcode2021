@@ -18,8 +18,7 @@ pub fn run() {
 fn part1(input: &[String]) -> usize {
     let mut unique_output_value_count: usize = 0;
     for line in input {
-        let line_parts: Vec<&str> = line.split('|').collect();
-        let output_values = line_parts[1];
+        let (_, output_values) = line.split_once('|').unwrap();
         let unique_output_values: Vec<&str> = output_values
             .split_whitespace()
             .filter(|s| s.len() == 2 || s.len() == 3 || s.len() == 4 || s.len() == 7)
