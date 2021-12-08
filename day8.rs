@@ -15,8 +15,7 @@ pub fn run() {
 
 fn part1(input: &[String]) -> usize {
     let mut unique_output_value_count: usize = 0;
-    for line in input {
-        let (_, output_values) = line.split_once('|').unwrap();
+    for (_, output_values) in parse_input(input) {
         let unique_output_values: Vec<&str> = output_values
             .split_whitespace()
             .filter(|s| s.len() == 2 || s.len() == 3 || s.len() == 4 || s.len() == 7)
@@ -28,4 +27,11 @@ fn part1(input: &[String]) -> usize {
 
 fn part2(input: &[String]) -> i64 {
     0
+}
+
+fn parse_input(input: &[String]) -> Vec<(&str, &str)> {
+    input
+        .iter()
+        .map(|s| s.split_once('|').unwrap())
+        .collect()
 }
