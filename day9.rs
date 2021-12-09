@@ -16,9 +16,9 @@ pub fn run() {
     println!("part 2 = {}", real_output.1);
 }
 
-fn explore(input: &[String]) -> (u32, u32) {
+fn explore(input: &[String]) -> (u32, u64) {
     let mut risk_levels: Vec<u32> = Vec::new();
-    let mut basin_sizes: Vec<u32> = Vec::new();
+    let mut basin_sizes: Vec<u64> = Vec::new();
 
     let grid: Vec<Vec<u32>> = parse_input(input);
     let row_len = grid[0].len();
@@ -33,28 +33,42 @@ fn explore(input: &[String]) -> (u32, u32) {
     }
 
     basin_sizes.sort_by(|a, b| b.cmp(a));
-    (risk_levels.iter().sum(), basin_sizes.iter().fold(1, |acc, size| acc * size))
+    (risk_levels.iter().sum(), basin_sizes.iter().take(3).fold(1, |acc, size| acc * size))
 }
 
 fn is_low_point(grid: &Vec<Vec<u32>>, x: usize, y: usize) -> bool {
     let height = grid[y][x];
     let neighbours = find_neighbours(grid, x, y);
-    neighbours.iter().all(|v| height < *v)
+    neighbours.iter().all(|(x, y)| height < grid[*y][*x])
 }
 
-fn find_basin_size(grid: &Vec<Vec<u32>>, x: usize, y: usize) -> u32 {
-    let basin_size = 1;
-    
-    basin_size
+fn find_basin_size(grid: &Vec<Vec<u32>>, x: usize, y: usize) -> u64 {
+    let mut basin_points: Vec<(usize, usize)> = Vec::new();
+    recurse_basin(grid, x, y, &mut basin_points);
+    basin_points.len() as u64
 }
 
-fn find_neighbours(grid: &Vec<Vec<u32>>, x: usize, y: usize) -> Vec<u32> {
-    let mut neighbours: Vec<u32> = Vec::new();
+fn recurse_basin(grid: &Vec<Vec<u32>>, x: usize, y: usize, checked_points: &mut Vec<(usize, usize)>) {
+    checked_points.push((x, y));
+    let height = grid[y][x];
 
-    if y > 0 { neighbours.push(grid[y-1][x]); }
-    if y < grid.len() - 1 { neighbours.push(grid[y+1][x]); }
-    if x > 0 { neighbours.push(grid[y][x-1]); }
-    if x < grid[y].len() - 1 { neighbours.push(grid[y][x+1]); }
+    for (n_x, n_y) in find_neighbours(grid, x, y) {
+        if !checked_points.contains(&(n_x, n_y)) {
+            let neighbour_height = grid[n_y][n_x];
+            if neighbour_height < 9 && neighbour_height > height {
+                recurse_basin(grid, n_x, n_y, checked_points);
+            }
+        }
+    }
+}
+
+fn find_neighbours(grid: &Vec<Vec<u32>>, x: usize, y: usize) -> Vec<(usize, usize)> {
+    let mut neighbours: Vec<(usize, usize)> = Vec::new();
+
+    if y > 0 { neighbours.push((x, y-1)); }
+    if y < grid.len() - 1 { neighbours.push((x, y+1)); }
+    if x > 0 { neighbours.push((x-1, y)); }
+    if x < grid[y].len() - 1 { neighbours.push((x+1, y)); }
 
     neighbours
 }
