@@ -6,34 +6,42 @@ pub fn run() {
     let sample_input = aoc::read_input("input/day9-sample.txt");
     let real_input = aoc::read_input("input/day9.txt");
 
-    println!("sample 1 = {}", part1(&sample_input));
-    println!("part 1 = {}", part1(&real_input));
+    let sample_output = explore(&sample_input);
+    let real_output = explore(&real_input);
 
-    //println!("sample 2 = {}", part2(&sample_input));
-    //println!("part 2 = {}", part2(&real_input));
+    println!("sample 1 = {}", sample_output.0);
+    println!("part 1 = {}", real_output.0);
+
+    println!("sample 2 = {}", sample_output.1);
+    println!("part 2 = {}", real_output.1);
 }
 
-fn part1(input: &[String]) -> u32 {
+fn explore(input: &[String]) -> (u32, u32) {
     let mut risk_levels: Vec<u32> = Vec::new();
+    let mut basin_sizes: Vec<u32> = Vec::new();
+
     let grid: Vec<Vec<u32>> = parse_input(input);
+    let row_len = grid[0].len();
+
     for y in 0..grid.len() {
-        let row = &grid[y];
-        for x in 0..row.len() {
-            let height = row[x];
-            let height_up = if y > 0 { grid[y-1][x] } else { u32::MAX };
-            let height_down = if y < grid.len() - 1 { grid[y+1][x] } else { u32::MAX };
-            let height_left = if x > 0 { grid[y][x-1] } else { u32::MAX };
-            let height_right = if x < row.len() - 1 { grid[y][x+1] } else { u32::MAX };
-            if height < height_up && height < height_down && height < height_left && height < height_right {
-                risk_levels.push(height + 1);
+        for x in 0..row_len {
+            if is_low_point(&grid, x, y) {
+                risk_levels.push(grid[y][x] + 1);
             }
         }
     }
-    risk_levels.iter().sum()
+
+    basin_sizes.sort_by(|a, b| b.cmp(a));
+    (risk_levels.iter().sum(), basin_sizes.iter().fold(1, |acc, size| acc * size))
 }
 
-fn part2(input: &[String]) -> usize {
-    0
+fn is_low_point(grid: &Vec<Vec<u32>>, x: usize, y: usize) -> bool {
+    let height = grid[y][x];
+    let height_up = if y > 0 { grid[y-1][x] } else { u32::MAX };
+    let height_down = if y < grid.len() - 1 { grid[y+1][x] } else { u32::MAX };
+    let height_left = if x > 0 { grid[y][x-1] } else { u32::MAX };
+    let height_right = if x < grid[y].len() - 1 { grid[y][x+1] } else { u32::MAX };
+    height < height_up && height < height_down && height < height_left && height < height_right
 }
 
 fn parse_input(input: &[String]) -> Vec<Vec<u32>> {
