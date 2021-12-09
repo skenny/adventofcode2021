@@ -27,6 +27,7 @@ fn explore(input: &[String]) -> (u32, u32) {
         for x in 0..row_len {
             if is_low_point(&grid, x, y) {
                 risk_levels.push(grid[y][x] + 1);
+                basin_sizes.push(find_basin_size(&grid, x, y));
             }
         }
     }
@@ -37,11 +38,25 @@ fn explore(input: &[String]) -> (u32, u32) {
 
 fn is_low_point(grid: &Vec<Vec<u32>>, x: usize, y: usize) -> bool {
     let height = grid[y][x];
-    let height_up = if y > 0 { grid[y-1][x] } else { u32::MAX };
-    let height_down = if y < grid.len() - 1 { grid[y+1][x] } else { u32::MAX };
-    let height_left = if x > 0 { grid[y][x-1] } else { u32::MAX };
-    let height_right = if x < grid[y].len() - 1 { grid[y][x+1] } else { u32::MAX };
-    height < height_up && height < height_down && height < height_left && height < height_right
+    let neighbours = find_neighbours(grid, x, y);
+    neighbours.iter().all(|v| height < *v)
+}
+
+fn find_basin_size(grid: &Vec<Vec<u32>>, x: usize, y: usize) -> u32 {
+    let basin_size = 1;
+    
+    basin_size
+}
+
+fn find_neighbours(grid: &Vec<Vec<u32>>, x: usize, y: usize) -> Vec<u32> {
+    let mut neighbours: Vec<u32> = Vec::new();
+
+    if y > 0 { neighbours.push(grid[y-1][x]); }
+    if y < grid.len() - 1 { neighbours.push(grid[y+1][x]); }
+    if x > 0 { neighbours.push(grid[y][x-1]); }
+    if x < grid[y].len() - 1 { neighbours.push(grid[y][x+1]); }
+
+    neighbours
 }
 
 fn parse_input(input: &[String]) -> Vec<Vec<u32>> {
