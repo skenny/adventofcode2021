@@ -14,7 +14,7 @@ pub fn run() {
 }
 
 fn part1(input: &[String]) -> u32 {
-    let mut low_points: Vec<u32> = Vec::new();
+    let mut risk_levels: Vec<u32> = Vec::new();
     let grid: Vec<Vec<u32>> = parse_input(input);
     for y in 0..grid.len() {
         let row = &grid[y];
@@ -25,15 +25,11 @@ fn part1(input: &[String]) -> u32 {
             let height_left = if x > 0 { grid[y][x-1] } else { u32::MAX };
             let height_right = if x < row.len() - 1 { grid[y][x+1] } else { u32::MAX };
             if height < height_up && height < height_down && height < height_left && height < height_right {
-                low_points.push(height);
+                risk_levels.push(height + 1);
             }
         }
     }
-
-    // why rust, why
-    let sum: u32 = low_points.iter().sum();
-    let size: usize = low_points.len();
-    return size as u32 + sum;
+    risk_levels.iter().sum()
 }
 
 fn part2(input: &[String]) -> usize {
