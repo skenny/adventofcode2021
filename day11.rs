@@ -28,7 +28,8 @@ fn part1(input: &[String]) -> u64 {
 fn part2(input: &[String]) -> u64 {
     let mut grid = parse_input(input);
     let mut step_count = 0;
-    while step(&mut grid) < 100 {
+    let grid_size = GRID_SIZE as u64 * GRID_SIZE as u64;
+    while step(&mut grid) < grid_size {
         step_count += 1;
     }
     step_count + 1
