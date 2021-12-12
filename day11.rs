@@ -111,15 +111,15 @@ fn find_neighbours(x: usize, y: usize) -> Vec<(usize, usize)> {
     neighbours
 }
 
-fn update_octopus(grid: &mut [[(u32, bool); 10]; 10], x: usize, y: usize, energy: u32, flashed: bool) {
+fn update_octopus(grid: &mut [[(u32, bool); GRID_SIZE]; GRID_SIZE], x: usize, y: usize, energy: u32, flashed: bool) {
     grid[y][x] = (energy, flashed);
 }
 
-fn parse_input(input: &[String]) -> [[(u32, bool); 10]; 10] {
-    let mut grid: [[(u32, bool); 10]; 10] = [[(0, false); 10]; 10];
+fn parse_input(input: &[String]) -> [[(u32, bool); GRID_SIZE]; GRID_SIZE] {
+    let mut grid: [[(u32, bool); GRID_SIZE]; GRID_SIZE] = [[(0, false); GRID_SIZE]; GRID_SIZE];
 
-    assert_eq!(10, input.len());
-    assert_eq!(10, input[0].len());
+    assert_eq!(GRID_SIZE, input.len());
+    assert_eq!(GRID_SIZE, input[0].len());
 
     for (y, line) in input.iter().enumerate() {
         for (x, c) in line.chars().enumerate() {
