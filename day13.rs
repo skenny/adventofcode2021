@@ -2,7 +2,7 @@ use crate::aoc;
 use std::collections::HashMap;
 
 pub fn run() {
-    println!("AOC 2021 - Day 11");
+    println!("AOC 2021 - Day 13");
 
     let sample_input = aoc::read_input("input/day13-sample.txt");
     println!("sample 1 = {}", part1(&sample_input));
@@ -11,6 +11,10 @@ pub fn run() {
     let real_input = aoc::read_input("input/day13.txt");
     println!("part 1 = {}", part1(&real_input));
     println!("part 2 = {}", part2(&real_input));
+
+    let jamie_input = aoc::read_input("input/day13-jamie.txt");
+    println!("jamie 1 = {}", part1(&jamie_input));
+    println!("jamie 2 = {}", part2(&jamie_input));    
 }
 
 fn part1(input: &[String]) -> usize {
