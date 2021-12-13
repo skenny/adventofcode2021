@@ -46,7 +46,7 @@ fn part2(input: &[String]) -> usize {
             if grid.contains_key(&(x, y)) {
                 row.push("#");
             } else {
-                row.push(".");
+                row.push(" ");
             }
         }
         println!("{}", row.join(""));
