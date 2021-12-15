@@ -6,11 +6,11 @@ pub fn run() {
 
     let sample_input = aoc::read_input("input/day14-sample.txt");
     println!("sample 1 = {}", part1(&sample_input));
-    //println!("sample 2 = {}", part2(&sample_input));
+    println!("sample 2 = {}", part2(&sample_input));
 
     let real_input = aoc::read_input("input/day14.txt");
     println!("part 1 = {}", part1(&real_input));
-    //println!("part 2 = {}", part2(&real_input));
+    println!("part 2 = {}", part2(&real_input));
 }
 
 fn part1(input: &[String]) -> usize {
@@ -22,48 +22,55 @@ fn part2(input: &[String]) -> usize {
 }
 
 fn apply_steps(input: &[String], num_steps: usize) -> usize {
-    let parsed_input = parse_input(input);
+    let (template, insertion_rules) = parse_input(input);
 
-    let mut template = parsed_input.0;
-    let insertion_rules = parsed_input.1;
-    
-    let mut inst = std::time::Instant::now();
-    for step in 0..num_steps {
-        log_step(step, &template, inst.elapsed());
-        inst = std::time::Instant::now();
-        template = apply_step(&template, &insertion_rules);
+    let mut pair_counts: HashMap<String, usize> = HashMap::new();
+    for pair in chunk_input(&template) {
+        *pair_counts.entry(pair).or_insert(0) += 1;
     }
 
-    let char_counts = count_chars(&template, &insertion_rules);
-    let min = char_counts.iter().min().unwrap();
-    let max = char_counts.iter().max().unwrap();
+    for _ in 0..num_steps {
+        pair_counts = apply_step(pair_counts, &insertion_rules);
+    }
+
+    // count characters
+    let mut char_counts = count_chars(&pair_counts, &insertion_rules);
+
+    // add one for the last char in the template
+    let last_template_char = template.chars().last().unwrap().to_string();
+    char_counts.iter_mut().for_each(|(ch, count)| if *ch == last_template_char { *count += 1; });
+
+    let counts: Vec<usize> = char_counts.iter().map(|(_, count)| *count).collect();
+    let min = counts.iter().min().unwrap();
+    let max = counts.iter().max().unwrap();
     max - min
 }
 
-fn apply_step(template: &String, insertion_rules: &HashMap<String, String>) -> String {
-    let mut new_template = String::new();
-    for i in 1..template.len() {
-        let pair = &template[i-1..=i];
-        if i == 1 {
-            new_template += &pair[0..1];
-        }
-        new_template += &insertion_rules[pair];
-        new_template += &pair[1..2];
+fn apply_step(pair_counts: HashMap<String, usize>, insertion_rules: &HashMap<String, String>) -> HashMap<String, usize> {
+    let mut new_pair_counts: HashMap<String, usize> = HashMap::new();
+    for (pair, count) in pair_counts.iter() {
+        let insertion_char = &insertion_rules[pair];
+        let left_pair = pair[0..1].to_owned() + insertion_char;
+        let right_pair = insertion_char.to_owned() + &pair[1..2];
+        *new_pair_counts.entry(left_pair).or_insert(0) += count;
+        *new_pair_counts.entry(right_pair).or_insert(0) += count;
     }
-    new_template
+    new_pair_counts
 }
 
-fn count_chars(template: &String, insertion_rules: &HashMap<String, String>) -> Vec<usize> {
+fn chunk_input(template: &String) -> Vec<String> {
+    let mut chunks: Vec<String> = Vec::new();
+    for i in 1..template.len() {
+        chunks.push(template[i-1..=i].to_string());
+    }
+    chunks
+}
+
+fn count_chars(pair_counts: &HashMap<String, usize>, insertion_rules: &HashMap<String, String>) -> Vec<(String, usize)> {
     let mut distinct_chars = insertion_rules.values().collect::<Vec<&String>>();
     distinct_chars.sort();
     distinct_chars.dedup();
-    distinct_chars.iter().map(|c| template.matches(*c).count()).collect()
-}
-
-fn log_step(step: usize, template: &String, duration: std::time::Duration) {
-    let cutoff = std::cmp::min(template.len(), 96);
-    let ellipsis = if cutoff == template.len() { "   " } else { "..." };
-    println!("After step {:>2}: {:<96}{} (len {}, {}ms)", step, &template[0..cutoff], ellipsis, template.len(), duration.as_millis());
+    distinct_chars.iter().map(|ch| (ch.to_string(), pair_counts.iter().filter(|(pair, _)| pair.starts_with(*ch)).fold(0, |acc, (_, count)| acc + count))).collect()
 }
 
 fn parse_input(input: &[String]) -> (String, HashMap<String, String>) {
