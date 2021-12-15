@@ -6,7 +6,7 @@ pub fn run() {
 
     let sample_input = aoc::read_input("input/day14-sample.txt");
     println!("sample 1 = {}", part1(&sample_input));
-    println!("sample 2 = {}", part2(&sample_input));
+    //println!("sample 2 = {}", part2(&sample_input));
 
     let real_input = aoc::read_input("input/day14.txt");
     println!("part 1 = {}", part1(&real_input));
@@ -55,16 +55,13 @@ fn apply_step(template: &String, insertion_rules: &HashMap<String, String>) -> S
 
 fn count_chars(template: &String, insertion_rules: &HashMap<String, String>) -> Vec<usize> {
     let mut distinct_chars = insertion_rules.values().collect::<Vec<&String>>();
+    distinct_chars.sort();
     distinct_chars.dedup();
-    let mut counts: Vec<usize> = Vec::new();
-    for distinct_char in distinct_chars {
-        counts.push(template.matches(distinct_char).count());
-    }
-    counts
+    distinct_chars.iter().map(|c| template.matches(*c).count()).collect()
 }
 
 fn log_step(step: usize, template: &String, duration: std::time::Duration) {
-    let cutoff = if template.len() < 96 { template.len() } else { 96 };
+    let cutoff = std::cmp::min(template.len(), 96);
     let ellipsis = if cutoff == template.len() { "   " } else { "..." };
     println!("After step {:>2}: {:<96}{} (len {}, {}ms)", step, &template[0..cutoff], ellipsis, template.len(), duration.as_millis());
 }
