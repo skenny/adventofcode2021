@@ -26,26 +26,21 @@ fn apply_steps(input: &[String], num_steps: usize) -> usize {
 
     let mut template = parsed_input.0;
     let insertion_rules = parsed_input.1;
-    for i in 0..num_steps {
-        let cutoff = if template.len() < 32 { template.len() } else { 32 };
-        println!("After step {}: {}... (len {})", i, &template[0..cutoff], template.len());
-        template = step(&template, &insertion_rules);
+    
+    let mut inst = std::time::Instant::now();
+    for step in 0..num_steps {
+        log_step(step, &template, inst.elapsed());
+        inst = std::time::Instant::now();
+        template = apply_step(&template, &insertion_rules);
     }
 
-    let mut distinct_chars = insertion_rules.values().collect::<Vec<&String>>();
-    distinct_chars.dedup();
-    let mut counts: Vec<usize> = Vec::new();
-    for distinct_char in distinct_chars {
-        counts.push(template.matches(distinct_char).count());
-    }
-
-    let min = counts.iter().min().unwrap();
-    let max = counts.iter().max().unwrap();
-
+    let char_counts = count_chars(&template, &insertion_rules);
+    let min = char_counts.iter().min().unwrap();
+    let max = char_counts.iter().max().unwrap();
     max - min
 }
 
-fn step(template: &str, insertion_rules: &HashMap<String, String>) -> String {
+fn apply_step(template: &String, insertion_rules: &HashMap<String, String>) -> String {
     let mut new_template = String::new();
     for i in 1..template.len() {
         let pair = &template[i-1..=i];
@@ -56,6 +51,22 @@ fn step(template: &str, insertion_rules: &HashMap<String, String>) -> String {
         new_template += &pair[1..2];
     }
     new_template
+}
+
+fn count_chars(template: &String, insertion_rules: &HashMap<String, String>) -> Vec<usize> {
+    let mut distinct_chars = insertion_rules.values().collect::<Vec<&String>>();
+    distinct_chars.dedup();
+    let mut counts: Vec<usize> = Vec::new();
+    for distinct_char in distinct_chars {
+        counts.push(template.matches(distinct_char).count());
+    }
+    counts
+}
+
+fn log_step(step: usize, template: &String, duration: std::time::Duration) {
+    let cutoff = if template.len() < 96 { template.len() } else { 96 };
+    let ellipsis = if cutoff == template.len() { "   " } else { "..." };
+    println!("After step {:>2}: {:<96}{} (len {}, {}ms)", step, &template[0..cutoff], ellipsis, template.len(), duration.as_millis());
 }
 
 fn parse_input(input: &[String]) -> (String, HashMap<String, String>) {
