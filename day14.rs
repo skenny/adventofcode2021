@@ -10,22 +10,29 @@ pub fn run() {
 
     let real_input = aoc::read_input("input/day14.txt");
     println!("part 1 = {}", part1(&real_input));
-    println!("part 2 = {}", part2(&real_input));
+    //println!("part 2 = {}", part2(&real_input));
 }
 
 fn part1(input: &[String]) -> usize {
+    apply_steps(input, 10)
+}
+
+fn part2(input: &[String]) -> usize {
+    apply_steps(input, 40)
+}
+
+fn apply_steps(input: &[String], num_steps: usize) -> usize {
     let parsed_input = parse_input(input);
 
     let mut template = parsed_input.0;
     let insertion_rules = parsed_input.1;
-    for i in 0..10 {
-        if template.len() < 50 {
-            println!("After step {}: {}", i, template);
-        }
+    for i in 0..num_steps {
+        let cutoff = if template.len() < 32 { template.len() } else { 32 };
+        println!("After step {}: {}... (len {})", i, &template[0..cutoff], template.len());
         template = step(&template, &insertion_rules);
     }
 
-    let mut distinct_chars = template.chars().collect::<Vec<char>>();
+    let mut distinct_chars = insertion_rules.values().collect::<Vec<&String>>();
     distinct_chars.dedup();
     let mut counts: Vec<usize> = Vec::new();
     for distinct_char in distinct_chars {
@@ -34,11 +41,8 @@ fn part1(input: &[String]) -> usize {
 
     let min = counts.iter().min().unwrap();
     let max = counts.iter().max().unwrap();
-    max - min
-}
 
-fn part2(input: &[String]) -> usize {
-    0
+    max - min
 }
 
 fn step(template: &str, insertion_rules: &HashMap<String, String>) -> String {
