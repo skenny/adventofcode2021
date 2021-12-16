@@ -79,34 +79,29 @@ impl Cave {
         visited.push(0);
         heap.push(Chiton { risk: 0, position: 0 });
 
-        while let Some(Chiton { risk, position }) = heap.pop() {
-            //println!("at {} with risk {}", position, risk);
+        let started_at = std::time::Instant::now();
 
+        while let Some(Chiton { risk, position }) = heap.pop() {
             if position == end {
-              //  println!("END!");
+                println!("Finished after {}s", started_at.elapsed().as_secs());
                 return Some(risk);
             }
-            // if risk > dist[position] {
-            //     println!("risk {} > {}", risk, dist[position]);
-            //     continue;
-            // }
-            
+
             for neighbour_position in self.find_neighbours(position) {
                 let neighbour_risk = self.chiton_risks[neighbour_position] as usize;
-                //println!("neighbour {} with risk {}", neighbour_position, neighbour_risk);
-
-                if visited.contains(&neighbour_position) {
-                    //println!("\talready visited...");
-                    continue;
-                }
-
-                if neighbour_risk < dist[neighbour_position] {
+                if !visited.contains(&neighbour_position) && neighbour_risk < dist[neighbour_position] {
                     heap.push(Chiton { risk: risk + neighbour_risk, position: neighbour_position });
                     visited.push(neighbour_position);
                     dist[neighbour_position] = neighbour_risk;
                 }
             }
+
+            if visited.len() % 1000 == 0 {
+                println!("{} nodes remaining, elapsed time is {}s...", dist.len() - visited.len(), started_at.elapsed().as_secs());
+            }
         }
+
+        println!("Finished without a path after {}s", started_at.elapsed().as_secs());
 
         None
     }
