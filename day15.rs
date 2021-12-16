@@ -41,7 +41,8 @@ fn parse_input(input: &[String]) -> Cave {
 struct Cave {
     chiton_risks: Vec<Vec<i8>>,
     grid_size: usize,
-    lowest_risk_score: i32
+    lowest_risk_score: i32,
+    paths: Vec<Vec<(usize, usize)>>
 }
 
 impl Cave {
@@ -50,7 +51,8 @@ impl Cave {
         Cave {
             chiton_risks: chiton_risks,
             grid_size: grid_size,
-            lowest_risk_score: i32::MAX
+            lowest_risk_score: i32::MAX,
+            paths: Vec::new()
         }        
     }
 
@@ -78,7 +80,7 @@ impl Cave {
     
     fn find_least_risky_path(&mut self) -> i32 {
         for (nx, ny) in self.find_neighbours(0, 0) {
-            println!("from start, going into {},{}", nx, ny);
+            println!("from start, checking {},{}", nx, ny);
             let mut visited = vec![(0, 0)];
             self.enter(nx, ny, &mut visited);
         }
@@ -94,20 +96,29 @@ impl Cave {
         visited.push((x, y));
 
         if self.is_end(x, y) {
-            self.lowest_risk_score = current_path_risk;
+            self.paths.push(visited.clone());
+            let path_count = self.paths.len();
+            if path_count % 10 == 0 {
+                println!("so far we've found {} paths...", path_count)
+            }
+
+            if current_path_risk < self.lowest_risk_score {
+                println!("new best path! {:<3}", current_path_risk);
+                self.lowest_risk_score = current_path_risk;
+            }
         } else {
             let mut neighbours = self.find_neighbours(x, y);
 
             // remove all neighbours we've already visited
             neighbours.retain(|p| !visited.contains(p));
 
-            // sort be risk to visit lowest first
             let mut neighbour_risks = neighbours
                 .iter()
-                .map(|p| (*p, self.chiton_risks[y][x])).collect::<Vec<((usize, usize), i8)>>();
-            neighbour_risks.sort_by(|(l_p, l_risk), (r_p, r_risk)| l_risk.cmp(r_risk));
+                .map(|p| (*p, self.chiton_risks[p.1][p.0])).collect::<Vec<((usize, usize), i8)>>();
+            // sort by risk, lowest first
+            //neighbour_risks.sort_by(|(_, l_risk), (_, r_risk)| l_risk.cmp(r_risk));
 
-            for (nx, ny) in neighbours {
+            for ((nx, ny), _) in neighbour_risks {
                 self.enter(nx, ny, visited);
             }
         }
