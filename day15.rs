@@ -9,11 +9,11 @@ pub fn run() {
 
     let sample_input = aoc::read_input("input/day15-sample.txt");
     println!("sample 1 = {}", part1(&sample_input));
-    //println!("sample 2 = {}", part2(&sample_input));
+    println!("sample 2 = {}", part2(&sample_input));
 
     let real_input = aoc::read_input("input/day15.txt");
     println!("part 1 = {}", part1(&real_input));
-    // println!("part 2 = {}", part2(&real_input));
+    println!("part 2 = {}", part2(&real_input));
 }
 
 fn part1(input: &[String]) -> usize {
@@ -21,8 +21,10 @@ fn part1(input: &[String]) -> usize {
     cave.find_least_risky_path().unwrap()
 }
 
-fn part2(input: &[String]) -> i32 {
-    0
+fn part2(input: &[String]) -> usize {
+    let mut cave = parse_input(input);
+    cave.asplode(5);
+    cave.find_least_risky_path().unwrap()
 }
 
 fn parse_input(input: &[String]) -> Cave {
@@ -117,6 +119,45 @@ impl Cave {
         (position % self.grid_size, position / self.grid_size)
     }
 
+    fn asplode(&mut self, asplode_by: usize) {
+        let mut new_chiton_risks: Vec<u8> = Vec::new();
+        let new_grid_size = self.grid_size * asplode_by;
+
+        // asplode the original cave horizontally
+        for row in self.chiton_risks.chunks(self.grid_size) {
+            let mut new_row: Vec<u8> = vec![0 as u8; new_grid_size];
+            for iteration in 0..asplode_by {
+                for (x, risk) in row.iter().enumerate() {
+                    let mut adjusted_risk = *risk + iteration as u8;
+                    if adjusted_risk > 9 {
+                        adjusted_risk = (adjusted_risk % 10) + 1;
+                    }
+                    new_row[iteration * self.grid_size + x] = adjusted_risk;
+                }
+            }
+            new_chiton_risks.extend(new_row);
+        }
+
+        let template = new_chiton_risks.clone();
+
+        // repeat template_rows vertically for each additional iteration
+        for iteration in 1..asplode_by {
+            for template_row in template.chunks(new_grid_size) {
+                let mut new_row: Vec<u8> = vec![0 as u8; template_row.len()];
+                for (x, risk) in template_row.iter().enumerate() {
+                    let mut adjusted_risk = *risk + iteration as u8;
+                    if adjusted_risk > 9 {
+                        adjusted_risk = (adjusted_risk % 10) + 1;
+                    }
+                    new_row[x] = adjusted_risk;
+                }
+                new_chiton_risks.extend(new_row);
+            }
+        }
+
+        self.chiton_risks = new_chiton_risks;
+        self.grid_size = new_grid_size;
+    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]
