@@ -71,6 +71,9 @@ impl Cave {
         let num_positions = self.grid_size * self.grid_size;
         let end = num_positions - 1;
 
+        // compute each position's neighbours
+        let position_neighbours: Vec<Vec<usize>> = (0..num_positions).map(|pos| self.find_neighbours(pos)).collect();
+
         let mut dist: Vec<usize> = (0..self.grid_size * self.grid_size).map(|_| usize::MAX).collect();
         let mut visited: Vec<usize> = Vec::new();
         let mut heap = BinaryHeap::new();
@@ -86,13 +89,19 @@ impl Cave {
                 println!("Finished after {}s", started_at.elapsed().as_secs());
                 return Some(risk);
             }
+            if risk > dist[position] {
+                continue;
+            }
+            if risk >= dist[end] {
+                continue;
+            }
 
-            for neighbour_position in self.find_neighbours(position) {
-                let neighbour_risk = self.chiton_risks[neighbour_position] as usize;
-                if !visited.contains(&neighbour_position) && neighbour_risk < dist[neighbour_position] {
-                    heap.push(Chiton { risk: risk + neighbour_risk, position: neighbour_position });
-                    visited.push(neighbour_position);
-                    dist[neighbour_position] = neighbour_risk;
+            for neighbour_position in &position_neighbours[position] {
+                let neighbour_risk = risk + self.chiton_risks[*neighbour_position] as usize;
+                if neighbour_risk < dist[*neighbour_position] && neighbour_risk < dist[end] && !visited.contains(&neighbour_position) {
+                    heap.push(Chiton { risk: neighbour_risk, position: *neighbour_position });
+                    visited.push(*neighbour_position);
+                    dist[*neighbour_position] = neighbour_risk;
                 }
             }
 
