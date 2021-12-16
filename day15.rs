@@ -92,6 +92,9 @@ impl Cave {
         if current_path_risk >= self.lowest_risk_score {
             return;
         }
+        if current_path_risk + self.manhattan_distance_to_end(x, y) >= self.lowest_risk_score {
+            return;
+        }
 
         visited.push((x, y));
 
@@ -115,6 +118,7 @@ impl Cave {
             let mut neighbour_risks = neighbours
                 .iter()
                 .map(|p| (*p, self.chiton_risks[p.1][p.0])).collect::<Vec<((usize, usize), i8)>>();
+            
             // sort by risk, lowest first
             //neighbour_risks.sort_by(|(_, l_risk), (_, r_risk)| l_risk.cmp(r_risk));
 
@@ -130,4 +134,9 @@ impl Cave {
         (self.grid_size - 1, self.grid_size - 1) == (x, y)
     }
 
+    fn manhattan_distance_to_end(&self, x: usize, y: usize) -> i32 {
+        let x_dist = (x as isize - self.grid_size as isize - 1).abs();
+        let y_dist = (y as isize - self.grid_size as isize - 1).abs();
+        (x_dist + y_dist) as i32
+    }
 }
