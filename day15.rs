@@ -1,6 +1,8 @@
 use crate::aoc;
+use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 
-const NEIGHBOURS: [(i8, i8); 4] = [(1, 0), (0, 1), (-1, 0), (0, -1)];
+const NEIGHBOURS: [(i32, i32); 4] = [(1, 0), (0, 1), (-1, 0), (0, -1)];
 
 pub fn run() {
     println!("AOC 2021 - Day 15");
@@ -14,9 +16,9 @@ pub fn run() {
     // println!("part 2 = {}", part2(&real_input));
 }
 
-fn part1(input: &[String]) -> i32 {
-    let mut cave = parse_input(input);
-    cave.find_least_risky_path()
+fn part1(input: &[String]) -> usize {
+    let cave = parse_input(input);
+    cave.find_least_risky_path().unwrap()
 }
 
 fn part2(input: &[String]) -> i32 {
@@ -24,119 +26,113 @@ fn part2(input: &[String]) -> i32 {
 }
 
 fn parse_input(input: &[String]) -> Cave {
-    let mut grid: Vec<Vec<i8>> = Vec::new();
+    let mut chiton_risks: Vec<u8> = Vec::new();
     let mut grid_size = 0;
-    for (y, line) in input.iter().enumerate() {
-        if y == 0 { 
-            grid_size = line.len();
-        }
-        let mut row = vec![0; grid_size];
-        line.chars().enumerate().for_each(|(x, c)| row[x] = c.to_digit(10).unwrap() as i8);
-        grid.push(row);
+    for line in input.iter() {
+        grid_size = line.len();
+        line.chars().for_each(|ch| chiton_risks.push(ch.to_digit(10).unwrap() as u8));
     }
-    Cave::new(grid, grid_size)
+    Cave { chiton_risks: chiton_risks, grid_size: grid_size }
 }
 
 #[derive(Debug)]
 struct Cave {
-    chiton_risks: Vec<Vec<i8>>,
-    grid_size: usize,
-    lowest_risk_score: i32,
-    paths: Vec<Vec<(usize, usize)>>
+    chiton_risks: Vec<u8>,
+    grid_size: usize
 }
 
 impl Cave {
 
-    fn new(chiton_risks: Vec<Vec<i8>>, grid_size: usize) -> Cave {
-        Cave {
-            chiton_risks: chiton_risks,
-            grid_size: grid_size,
-            lowest_risk_score: i32::MAX,
-            paths: Vec::new()
-        }        
-    }
-
     fn print_grid(&self) {
         self.chiton_risks
-            .iter()
+            .chunks(self.grid_size)
             .for_each(|row| println!("{}", row.iter().map(|risk| risk.to_string()).collect::<Vec<String>>().join("")));
     }
 
-    fn find_neighbours(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
-        let mut neighbours: Vec<(usize, usize)> = Vec::new();
+    fn find_neighbours(&self, pos: usize) -> Vec<usize> {
+        let mut neighbours = Vec::new();
+        let point = self.position_to_point(pos);
         for vector in NEIGHBOURS {
-            let nx = x as i8 + vector.0;
-            let ny = y as i8 + vector.1;
-            if nx >= 0 && nx < self.grid_size as i8 && ny >= 0 && ny < self.grid_size as i8 {
-                neighbours.push((nx as usize, ny as usize));
+            let nx = point.0 as i32 + vector.0;
+            let ny = point.1 as i32 + vector.1;
+            if nx >= 0 && nx < self.grid_size as i32 && ny >= 0 && ny < self.grid_size as i32 {
+                neighbours.push(self.point_to_position(nx as usize, ny as usize));
             }
         }
+        //println!("neighbours of {} are {:?}", pos, &neighbours);
         neighbours
     }
 
-    fn calc_path_risk(&self, path: &Vec<(usize, usize)>) -> i32 {
-        path.iter().fold(0, |acc, (x, y)| self.chiton_risks[*y][*x] as i32 + acc)
-    }
-    
-    fn find_least_risky_path(&mut self) -> i32 {
-        for (nx, ny) in self.find_neighbours(0, 0) {
-            println!("from start, checking {},{}", nx, ny);
-            let mut visited = vec![(0, 0)];
-            self.enter(nx, ny, &mut visited);
-        }
-        self.lowest_risk_score
-    }
+    fn find_least_risky_path(&self) -> Option<usize> {
+        // djikstra, from https://doc.rust-lang.org/std/collections/binary_heap/index.html
 
-    fn enter(&mut self, x: usize, y: usize, visited: &mut Vec<(usize, usize)>) {
-        let current_path_risk = self.calc_path_risk(visited);
-        if current_path_risk >= self.lowest_risk_score {
-            return;
-        }
-        if current_path_risk + self.manhattan_distance_to_end(x, y) >= self.lowest_risk_score {
-            return;
-        }
+        let num_positions = self.grid_size * self.grid_size;
+        let end = num_positions - 1;
 
-        visited.push((x, y));
+        let mut dist: Vec<usize> = (0..self.grid_size * self.grid_size).map(|_| usize::MAX).collect();
+        let mut visited: Vec<usize> = Vec::new();
+        let mut heap = BinaryHeap::new();
 
-        if self.is_end(x, y) {
-            self.paths.push(visited.clone());
-            let path_count = self.paths.len();
-            if path_count % 10 == 0 {
-                println!("so far we've found {} paths...", path_count)
+        dist[0] = 0;
+        visited.push(0);
+        heap.push(Chiton { risk: 0, position: 0 });
+
+        while let Some(Chiton { risk, position }) = heap.pop() {
+            //println!("at {} with risk {}", position, risk);
+
+            if position == end {
+              //  println!("END!");
+                return Some(risk);
             }
-
-            if current_path_risk < self.lowest_risk_score {
-                println!("new best path! {:<3}", current_path_risk);
-                self.lowest_risk_score = current_path_risk;
-            }
-        } else {
-            let mut neighbours = self.find_neighbours(x, y);
-
-            // remove all neighbours we've already visited
-            neighbours.retain(|p| !visited.contains(p));
-
-            let mut neighbour_risks = neighbours
-                .iter()
-                .map(|p| (*p, self.chiton_risks[p.1][p.0])).collect::<Vec<((usize, usize), i8)>>();
+            // if risk > dist[position] {
+            //     println!("risk {} > {}", risk, dist[position]);
+            //     continue;
+            // }
             
-            // sort by risk, lowest first
-            //neighbour_risks.sort_by(|(_, l_risk), (_, r_risk)| l_risk.cmp(r_risk));
+            for neighbour_position in self.find_neighbours(position) {
+                let neighbour_risk = self.chiton_risks[neighbour_position] as usize;
+                //println!("neighbour {} with risk {}", neighbour_position, neighbour_risk);
 
-            for ((nx, ny), _) in neighbour_risks {
-                self.enter(nx, ny, visited);
+                if visited.contains(&neighbour_position) {
+                    //println!("\talready visited...");
+                    continue;
+                }
+
+                if neighbour_risk < dist[neighbour_position] {
+                    heap.push(Chiton { risk: risk + neighbour_risk, position: neighbour_position });
+                    visited.push(neighbour_position);
+                    dist[neighbour_position] = neighbour_risk;
+                }
             }
         }
 
-        visited.pop();
+        None
     }
 
-    fn is_end(&self, x: usize, y: usize) -> bool {
-        (self.grid_size - 1, self.grid_size - 1) == (x, y)
+    fn point_to_position(&self, x: usize, y: usize) -> usize {
+        y * self.grid_size + x
     }
 
-    fn manhattan_distance_to_end(&self, x: usize, y: usize) -> i32 {
-        let x_dist = (x as isize - self.grid_size as isize - 1).abs();
-        let y_dist = (y as isize - self.grid_size as isize - 1).abs();
-        (x_dist + y_dist) as i32
+    fn position_to_point(&self, position: usize) -> (usize, usize) {
+        (position % self.grid_size, position / self.grid_size)
+    }
+
+}
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+struct Chiton {
+    risk: usize,
+    position: usize,
+}
+
+impl Ord for Chiton {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.risk.cmp(&self.risk).then_with(|| self.position.cmp(&other.position))
+    }
+}
+
+impl PartialOrd for Chiton {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
