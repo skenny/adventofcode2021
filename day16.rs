@@ -27,14 +27,17 @@ pub fn run() {
     // println!("part 2 = {}", part2(&real_input));
 }
 
-fn part1(input: &[String]) -> usize {
+fn part1(input: &[String]) -> i32 {
     let outer_packet = get_outer_packet(&input[0]);
-    // TODO
-    0
+    sum_versions(&outer_packet)
 }
 
 fn part2(input: &[String]) -> usize {
     0
+}
+
+fn sum_versions(packet: &Packet) -> i32 {
+    packet.version as i32 + packet.subpackets.iter().fold(0, |acc, subpacket| acc + sum_versions(subpacket))
 }
 
 fn get_outer_packet(input: &str) -> Packet {
