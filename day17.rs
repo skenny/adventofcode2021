@@ -1,55 +1,64 @@
 use crate::aoc;
+use std::ops::Range;
+use regex::Regex;
 
 pub fn run() {
     println!("AOC 2021 - Day 17");
 
     let sample_input = aoc::read_input("input/day17-sample.txt");
-    println!("sample 1 = {}", part1(&sample_input));
-    //println!("sample 2 = {}", part2(&sample_input));
+    launch_probes(&sample_input);
 
     let real_input = aoc::read_input("input/day17.txt");
-    //println!("part 1 = {}", part1(&real_input));
-    //println!("part 2 = {}", part2(&real_input));
+    launch_probes(&real_input);
 }
 
-fn part1(input: &[String]) -> usize {
-    let mut probe = Probe::new();
-    probe.launch((7, 2));
-    probe.track_flight(10);
-    0
-}
+fn launch_probes(input: &[String]) {
+    let (x_target, y_target) = parse_input(input);
+    let mut good_velocities: Vec<(i32, i32)> = Vec::new();
+    let mut max_height = i32::MIN;
 
-fn part2(input: &[String]) -> usize {
-    0
-}
+    for ivx in 0..500 {
+        for ivy in -500..500 {
+            let mut probe_x = 0;
+            let mut probe_y = 0;
+            let mut velocity_x = ivx;
+            let mut velocity_y = ivy;
+            let mut launch_max_height = i32::MIN;
 
-#[derive(Debug)]
-struct Probe {
-    position: (i32, i32),
-    velocity: (i32, i32)
-}
+            loop {
+                probe_x += velocity_x;
+                probe_y += velocity_y;
+                velocity_x = std::cmp::max(0, velocity_x - 1);
+                velocity_y -= 1;
+                launch_max_height = std::cmp::max(launch_max_height, probe_y);
+        
+                if probe_x >= x_target.start && probe_x <= x_target.end && probe_y >= y_target.start && probe_y <= y_target.end {
+                    good_velocities.push((ivx, ivy));
+                    max_height = std::cmp::max(max_height, launch_max_height);
+                    break;
+                }
 
-impl Probe {
-    fn new() -> Probe {
-        Probe {
-            position: (0, 0),
-            velocity: (0, 0)
+                if probe_x > x_target.end || probe_y < y_target.start {
+                    break;
+                }
+            }
         }
     }
 
-    fn launch(&mut self, initial_velocity: (i32, i32)) {
-        self.velocity = initial_velocity;
-    }
+    println!("part 1 = {}", max_height);
+    println!("part 2 = {}", good_velocities.len());
+}
 
-    fn track_flight(&mut self, steps: i32) {
-        for i in 0..steps {
-            self.step();
-            println!("after step {} -> {:?}", i, self);
-        }
-    }
+fn parse_input(input: &[String]) -> (Range<i32>, Range<i32>) {
+    let input_line = &input[0];
+    let pattern: Regex = Regex::new("target area: x=(\\d*)..(\\d*), y=(-?\\d*)..(-?\\d*)").unwrap();
+    assert!(pattern.is_match(input_line));
 
-    fn step(&mut self) {
-        self.position = (self.position.0 + self.velocity.0, self.position.1 + self.velocity.1);
-        self.velocity = (std::cmp::max(0, self.velocity.0 - 1), self.velocity.1 - 1);
-    }
+    let captures = pattern.captures(input_line).unwrap();
+    let x_min = captures.get(1).unwrap().as_str().parse::<i32>().unwrap();
+    let x_max = captures.get(2).unwrap().as_str().parse::<i32>().unwrap();
+    let y_min = captures.get(3).unwrap().as_str().parse::<i32>().unwrap();
+    let y_max = captures.get(4).unwrap().as_str().parse::<i32>().unwrap();
+
+    (x_min..x_max, y_min..y_max)
 }
