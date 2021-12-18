@@ -156,7 +156,7 @@ impl Packet {
             4 => self.literal_value.unwrap(),
             5 => if self.subpackets[0].calculate_value() > self.subpackets[1].calculate_value() { 1 } else { 0 }
             6 => if self.subpackets[0].calculate_value() < self.subpackets[1].calculate_value() { 1 } else { 0 },
-            7=> if self.subpackets[0].calculate_value() == self.subpackets[1].calculate_value() { 1 } else { 0 },
+            7 => if self.subpackets[0].calculate_value() == self.subpackets[1].calculate_value() { 1 } else { 0 },
             _ => 0
         }
     }
