@@ -28,12 +28,8 @@ pub fn run() {
 
 fn decode_transmission(input: &[String]) {
     let outer_packet = get_outer_packet(&input[0]);
-    println!("part 1 = {}", sum_versions(&outer_packet));
+    println!("part 1 = {}", outer_packet.calculate_version_sum());
     println!("part 2 = {}", outer_packet.calculate_value());
-}
-
-fn sum_versions(packet: &Packet) -> i32 {
-    packet.version as i32 + packet.subpackets.iter().fold(0, |sum, subpacket| sum + sum_versions(subpacket))
 }
 
 fn get_outer_packet(input: &str) -> Packet {
@@ -144,6 +140,10 @@ impl Packet {
             literal_value: None,
             subpackets: Vec::new()
         }
+    }
+
+    fn calculate_version_sum(&self) -> i32 {
+        self.version as i32 + self.subpackets.iter().fold(0, |sum, subpacket| sum + subpacket.calculate_version_sum())
     }
 
     fn calculate_value(&self) -> i64 {
