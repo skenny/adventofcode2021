@@ -42,8 +42,8 @@ fn parse_transmission(input: &str) -> String {
 }
 
 fn parse_packet(tx: &mut String) -> Packet {
-    let version = parse_i8(bite_me(tx, 3));
-    let type_id = parse_i8(bite_me(tx, 3));
+    let version = parse_i8(chomp_at_the_bits(tx, 3));
+    let type_id = parse_i8(chomp_at_the_bits(tx, 3));
 
     let mut packet = Packet::new(version, type_id);
 
@@ -51,7 +51,7 @@ fn parse_packet(tx: &mut String) -> Packet {
         // literal value packet
         let mut binary_value = String::new();
         loop {
-            let group = bite_me(tx, 5);
+            let group = chomp_at_the_bits(tx, 5);
             binary_value.push_str(&group[1..]);
             if group[0..1] == *"0" {
                 break;
@@ -61,16 +61,16 @@ fn parse_packet(tx: &mut String) -> Packet {
     } else {
         // operator packet
         let mut subpackets: Vec<Packet> = Vec::new();
-        let mode = bite_me(tx, 1);
+        let mode = chomp_at_the_bits(tx, 1);
         if mode == "0" {
-            let bit_len = parse_usize(bite_me(tx, 15));
-            let mut subpacket_bits = bite_me(tx, bit_len);
+            let bit_len = parse_usize(chomp_at_the_bits(tx, 15));
+            let mut subpacket_bits = chomp_at_the_bits(tx, bit_len);
             while subpacket_bits.len() > 0 {
                 let subpacket = parse_packet(&mut subpacket_bits);
                 subpackets.push(subpacket);
             }
         } else {
-            let num_sub_packets = parse_i32(bite_me(tx, 11));
+            let num_sub_packets = parse_i32(chomp_at_the_bits(tx, 11));
             for _ in 0..num_sub_packets {
                 let subpacket = parse_packet(tx);
                 subpackets.push(subpacket);
@@ -82,7 +82,7 @@ fn parse_packet(tx: &mut String) -> Packet {
     packet
 }
 
-fn bite_me(tx: &mut String, len: usize) -> String {
+fn chomp_at_the_bits(tx: &mut String, len: usize) -> String {
     tx.drain(..len).collect()
 }
 
