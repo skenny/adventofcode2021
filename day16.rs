@@ -149,51 +149,14 @@ impl Packet {
     fn calculate_value(&self) -> i64 {
         let subpacket_values = self.subpackets.iter().map(|p| p.calculate_value());
         match self.type_id {
-            /*
-            Packets with type ID 0 are sum packets - their value is the sum of the values of their sub-packets. 
-            If they only have a single sub-packet, their value is the value of the sub-packet.
-            */
             0 => subpacket_values.sum(),
-            
-            /*
-            Packets with type ID 1 are product packets - their value is the result of multiplying together the values of their sub-packets. 
-            If they only have a single sub-packet, their value is the value of the sub-packet.
-            */
             1 => subpacket_values.product(),
-            
-            /*
-            Packets with type ID 2 are minimum packets - their value is the minimum of the values of their sub-packets.
-            */
             2 => subpacket_values.min().unwrap(),
-            
-            /*
-            Packets with type ID 3 are maximum packets - their value is the maximum of the values of their sub-packets.
-            */
             3 => subpacket_values.max().unwrap(),
-            
-            /*
-            Literal value!
-            */
             4 => self.literal_value.unwrap(),
-
-            /*
-            Packets with type ID 5 are greater than packets - their value is 1 if the value of the first sub-packet is greater than the 
-            value of the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
-            */
             5 => if self.subpackets[0].calculate_value() > self.subpackets[1].calculate_value() { 1 } else { 0 }
-            
-            /*
-            Packets with type ID 6 are less than packets - their value is 1 if the value of the first sub-packet is less than the value of 
-            the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
-            */
             6 => if self.subpackets[0].calculate_value() < self.subpackets[1].calculate_value() { 1 } else { 0 },
-            
-            /*
-            Packets with type ID 7 are equal to packets - their value is 1 if the value of the first sub-packet is equal to the value of 
-            the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
-            */
             7=> if self.subpackets[0].calculate_value() == self.subpackets[1].calculate_value() { 1 } else { 0 },
-
             _ => 0
         }
     }
