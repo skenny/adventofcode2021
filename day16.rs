@@ -23,21 +23,17 @@ pub fn run() {
     assert_eq!(3, sample_3.subpackets.len());
 
     let real_input = aoc::read_input("input/day16.txt");
-    println!("part 1 = {}", part1(&real_input));
-    // println!("part 2 = {}", part2(&real_input));
+    decode_transmission(&real_input);
 }
 
-fn part1(input: &[String]) -> i32 {
+fn decode_transmission(input: &[String]) {
     let outer_packet = get_outer_packet(&input[0]);
-    sum_versions(&outer_packet)
-}
-
-fn part2(input: &[String]) -> usize {
-    0
+    println!("part 1 = {}", sum_versions(&outer_packet));
+    println!("part 2 = {}", outer_packet.calculate_value());
 }
 
 fn sum_versions(packet: &Packet) -> i32 {
-    packet.version as i32 + packet.subpackets.iter().fold(0, |acc, subpacket| acc + sum_versions(subpacket))
+    packet.version as i32 + packet.subpackets.iter().fold(0, |sum, subpacket| sum + sum_versions(subpacket))
 }
 
 fn get_outer_packet(input: &str) -> Packet {
@@ -147,6 +143,58 @@ impl Packet {
             type_id: type_id,
             literal_value: None,
             subpackets: Vec::new()
+        }
+    }
+
+    fn calculate_value(&self) -> i64 {
+        let subpacket_values = self.subpackets.iter().map(|p| p.calculate_value());
+        match self.type_id {
+            /*
+            Packets with type ID 0 are sum packets - their value is the sum of the values of their sub-packets. 
+            If they only have a single sub-packet, their value is the value of the sub-packet.
+            */
+            0 => subpacket_values.sum(),
+            
+            /*
+            Packets with type ID 1 are product packets - their value is the result of multiplying together the values of their sub-packets. 
+            If they only have a single sub-packet, their value is the value of the sub-packet.
+            */
+            1 => subpacket_values.product(),
+            
+            /*
+            Packets with type ID 2 are minimum packets - their value is the minimum of the values of their sub-packets.
+            */
+            2 => subpacket_values.min().unwrap(),
+            
+            /*
+            Packets with type ID 3 are maximum packets - their value is the maximum of the values of their sub-packets.
+            */
+            3 => subpacket_values.max().unwrap(),
+            
+            /*
+            Literal value!
+            */
+            4 => self.literal_value.unwrap(),
+
+            /*
+            Packets with type ID 5 are greater than packets - their value is 1 if the value of the first sub-packet is greater than the 
+            value of the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
+            */
+            5 => if self.subpackets[0].calculate_value() > self.subpackets[1].calculate_value() { 1 } else { 0 }
+            
+            /*
+            Packets with type ID 6 are less than packets - their value is 1 if the value of the first sub-packet is less than the value of 
+            the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
+            */
+            6 => if self.subpackets[0].calculate_value() < self.subpackets[1].calculate_value() { 1 } else { 0 },
+            
+            /*
+            Packets with type ID 7 are equal to packets - their value is 1 if the value of the first sub-packet is equal to the value of 
+            the second sub-packet; otherwise, their value is 0. These packets always have exactly two sub-packets.
+            */
+            7=> if self.subpackets[0].calculate_value() == self.subpackets[1].calculate_value() { 1 } else { 0 },
+
+            _ => 0
         }
     }
 }
