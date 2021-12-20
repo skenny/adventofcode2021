@@ -4,21 +4,21 @@ pub fn run() {
     println!("AOC 2021 - Day 20");
 
     let sample_input = aoc::read_input("input/day20-sample.txt");
-    part1(&sample_input);
+    println!("part 1 = {}", enhance(&sample_input, 2));
+    println!("part 2 = {}", enhance(&sample_input, 50));
 
     let real_input = aoc::read_input("input/day20.txt");
-    part1(&real_input);
+    println!("part 1 = {}", enhance(&real_input, 2));
+    println!("part 2 = {}", enhance(&real_input, 50));
 }
 
-fn part1(input: &[String]) {
+fn enhance(input: &[String], iterations: i8) -> i64 {
     let (enhancement_algo, mut image) = parse_input(input);
 
-    println!("Input image is {:?}...", (image.len(), image.len()));
-    print_image(&image);
-
-    for _iteration in 0..2 {
+    let mut infinite_value = false;
+    for _iteration in 0..iterations {
         let mut new_image = vec![vec![false; image.len() + 2]; image.len() + 2];
-        let mut infinite_value = false;
+        let mut new_infinite_value = false;
         for y in 0..new_image.len() {
             for x in 0..new_image.len() {
                 let orig_x = x as isize - 1;
@@ -28,16 +28,16 @@ fn part1(input: &[String]) {
                 let decimal = usize::from_str_radix(&binary, 2).unwrap();
                 let enhancement_pixel = enhancement_algo[decimal];
                 if orig_x < 0 && orig_y < 0 {
-                    infinite_value = enhancement_pixel;
+                    new_infinite_value = enhancement_pixel;
                 }
                 new_image[y][x] = enhancement_pixel;
             }
         }
+        infinite_value = new_infinite_value;
         image = new_image;
     }
 
-    println!("Output image is {:?}...", (image.len(), image.len()));
-    print_image(&image);
+    //print_image(&image);
 
     let mut lit_pixels = 0;
     for y in 0..image.len() {
@@ -45,8 +45,7 @@ fn part1(input: &[String]) {
             if image[y][x] { lit_pixels += 1; }
         }
     }
-
-    println!("part 1 = {}", lit_pixels);
+    lit_pixels
 }
 
 fn find_pixels(x: isize, y: isize, image: &Vec<Vec<bool>>, infinite_value: bool) -> Vec<bool> {
@@ -76,7 +75,5 @@ fn parse_input(input: &[String]) -> (Vec<bool>, Vec<Vec<bool>>) {
 }
 
 fn print_image(image: &Vec<Vec<bool>>) {
-    for row in image {
-        println!("{}", row.iter().map(|pixel| if *pixel { "#" } else { "." }).collect::<Vec<&str>>().join(""));
-    }
+    image.iter().for_each(|row| println!("{}", row.iter().map(|pixel| if *pixel { "#" } else { "." }).collect::<Vec<&str>>().join("")));
 }
