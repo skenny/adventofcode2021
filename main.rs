@@ -1,6 +1,6 @@
 mod aoc;
-mod day20;
+mod day21;
 
 fn main() {
-    day20::run();
+    day21::run();
 }
