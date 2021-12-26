@@ -21,15 +21,28 @@ pub fn run() {
 }
 
 fn part1(input: &[String]) -> usize {
-    let mut on_cubes: HashMap<(i32, i32, i32), bool> = HashMap::new();
-    for line in input {
-        let command = parse_command(line);
+    let commands: Vec<Command> = input.iter().map(|line| parse_command(line)).collect();
+    turn_on_cubes(&commands, Some((-50, 50)))
+}
 
-        // limit all ranges to -50..50
-        let x_range = (std::cmp::max(command.x_range.0, -50), std::cmp::min(command.x_range.1, 50));
-        let y_range = (std::cmp::max(command.y_range.0, -50), std::cmp::min(command.y_range.1, 50));
-        let z_range = (std::cmp::max(command.z_range.0, -50), std::cmp::min(command.z_range.1, 50));
-        
+fn part2(input: &[String]) -> usize {
+    let commands: Vec<Command> = input.iter().map(|line| parse_command(line)).collect();
+    let reduced_commands = reduce_commands(&commands);
+    turn_on_cubes(&reduced_commands, None)
+}
+
+fn turn_on_cubes(commands: &Vec<Command>, maybe_limit: Option<(i32, i32)>) -> usize {
+    let mut on_cubes: HashMap<(i32, i32, i32), bool> = HashMap::new();
+    for command in commands {
+        let mut x_range = command.x_range;
+        let mut y_range = command.y_range;
+        let mut z_range = command.z_range;
+        if maybe_limit.is_some() {
+            let limit = maybe_limit.unwrap();
+            x_range = (std::cmp::max(x_range.0, limit.0), std::cmp::min(x_range.1, limit.1));
+            y_range = (std::cmp::max(y_range.0, limit.0), std::cmp::min(y_range.1, limit.1));
+            z_range = (std::cmp::max(z_range.0, limit.0), std::cmp::min(z_range.1, limit.1));
+        }
         for x in x_range.0..=x_range.1 {
             for y in y_range.0..=y_range.1 {
                 for z in z_range.0..=z_range.1 {
@@ -46,8 +59,20 @@ fn part1(input: &[String]) -> usize {
     on_cubes.len()
 }
 
-fn part2(input: &[String]) -> i32 {
-    0
+fn reduce_commands(commands: &Vec<Command>) -> Vec<Command> {
+    let new_commands: Vec<Command> = Vec::new();
+    for command in commands {
+        for new_command in commands {
+            if new_command.x_range.0 <= command.x_range.1 && new_command.x_range.1 >= command.x_range.0 {
+                if new_command.y_range.0 <= command.y_range.1 && new_command.y_range.1 >= command.y_range.0 {
+                    if new_command.z_range.0 <= command.z_range.1 && new_command.z_range.1 >= command.z_range.0 {
+                        //println!("command {:?} overlaps with {:?}", command, new_command);
+                    }
+                }
+            }
+        }
+    }
+    new_commands
 }
 
 fn parse_command(input: &str) -> Command {
@@ -80,6 +105,7 @@ fn parse_command(input: &str) -> Command {
     }
 }
 
+#[derive(Debug, Clone)]
 struct Command {
     on: bool,
     x_range: (i32, i32),
