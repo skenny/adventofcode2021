@@ -10,14 +10,27 @@ pub fn run() {
     assert_eq!("[[3,[2,[8,0]]],[9,[5,[7,0]]]]", reduce("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]"));
     assert_eq!("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]", add_and_reduce("[[[[4,3],4],4],[7,[[8,4],9]]]", "[1,1]"));
 
-    let sample_1 = aoc::read_input("input/day18-sample-1.txt");
-    part1(&sample_1);
+    assert_eq!(29, calc_magnitude("[9,1]"));
+    assert_eq!(21, calc_magnitude("[1,9]"));
+    assert_eq!(129, calc_magnitude("[[9,1],[1,9]]"));
+    assert_eq!(143, calc_magnitude("[[1,2],[[3,4],5]]"));
+    assert_eq!(1384, calc_magnitude("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]"));
+    assert_eq!(445, calc_magnitude("[[[[1,1],[2,2]],[3,3]],[4,4]]"));
+    assert_eq!(791, calc_magnitude("[[[[3,0],[5,3]],[4,4]],[5,5]]"));
+    assert_eq!(1137, calc_magnitude("[[[[5,0],[7,4]],[5,5]],[6,6]]"));
+    assert_eq!(3488, calc_magnitude("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]"));
 
-    //let real_input = aoc::read_input("input/day18.txt");
-    //part1(&real_input);
+    let sample_1 = aoc::read_input("input/day18-sample-1.txt");
+    println!("sample 1 = {}", part1(&sample_1));
+
+    let sample_2 = aoc::read_input("input/day18-sample-2.txt");
+    println!("sample 2 = {}", part1(&sample_2));
+
+    let real_input = aoc::read_input("input/day18.txt");
+    println!("part 1 = {}", part1(&real_input));
 }
 
-fn part1(input: &[String]) {
+fn part1(input: &[String]) -> i32 {
     let mut snailfish = Vec::from(input);
     while snailfish.len() > 1 {
         let mut new_snailfish = vec![add_and_reduce(&snailfish[0], &snailfish[1])];
@@ -26,11 +39,35 @@ fn part1(input: &[String]) {
         }
         snailfish = new_snailfish;
     }
+    calc_magnitude(&snailfish[0])
+}
+
+fn calc_magnitude(snailfish: &str) -> i32 {
+    if snailfish.chars().all(char::is_numeric) {
+        return i32::from_str_radix(snailfish, 10).unwrap();
+    }
+
+    let mut magnitude = 0;
+    let mut depth = 0;
+
+    for (i, ch) in snailfish.chars().enumerate() {
+        if ch == '[' {
+            depth += 1;
+        } else if ch == ']' {
+            depth -= 1;
+        } else if ch == ',' && depth == 1 {
+            let left = &snailfish[1..i];
+            let right = &snailfish[i+1..snailfish.len()-1];
+            magnitude += 3 * calc_magnitude(left) + 2 * calc_magnitude(right)
+        }
+    }
+
+    magnitude
 }
 
 fn add_and_reduce(left: &str, right: &str) -> String {
     let reduced = rrreduce(format!("[{},{}]", left, right));
-    println!("  {}\n+ {}\n= {}\n", left, right, &reduced);
+    //println!("  {}\n+ {}\n= {}\n", left, right, &reduced);
     reduced
 }
 
