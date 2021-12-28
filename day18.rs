@@ -21,13 +21,16 @@ pub fn run() {
     assert_eq!(3488, calc_magnitude("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]"));
 
     let sample_1 = aoc::read_input("input/day18-sample-1.txt");
-    println!("sample 1 = {}", part1(&sample_1));
+    println!("sample 1 1 = {}", part1(&sample_1));
+    println!("sample 1 2 = {}", part2(&sample_1));
 
     let sample_2 = aoc::read_input("input/day18-sample-2.txt");
-    println!("sample 2 = {}", part1(&sample_2));
+    println!("sample 2 1 = {}", part1(&sample_2));
+    println!("sample 2 2 = {}", part2(&sample_2));
 
     let real_input = aoc::read_input("input/day18.txt");
     println!("part 1 = {}", part1(&real_input));
+    println!("part 2 = {}", part2(&real_input));
 }
 
 fn part1(input: &[String]) -> i32 {
@@ -40,6 +43,18 @@ fn part1(input: &[String]) -> i32 {
         snailfish = new_snailfish;
     }
     calc_magnitude(&snailfish[0])
+}
+
+fn part2(input: &[String]) -> i32 {
+    let mut max_magnitude = 0i32;
+    for (i, left) in input.iter().enumerate() {
+        for (j, right) in input.iter().enumerate() {
+            if i != j {
+                max_magnitude = std::cmp::max(max_magnitude, calc_magnitude(&add_and_reduce(&left, &right)));
+            }
+        }
+    }
+    max_magnitude
 }
 
 fn calc_magnitude(snailfish: &str) -> i32 {
