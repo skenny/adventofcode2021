@@ -14,26 +14,35 @@ pub fn run() {
 }
 
 fn align_scanners(input: &[String]) {
-    let mut fields = parse_input(input);
+    let mut scanners = parse_input(input);
 
-    let (reference_field, remaining_fields) = fields.split_first_mut().unwrap();
-    let mut remaining_fields_queue: VecDeque<&mut Field> = VecDeque::from_iter(remaining_fields);
+    let (reference_scanner, other_scanners) = scanners.split_first_mut().unwrap();
 
+    let mut remaining_scanners: VecDeque<&mut Scanner> = VecDeque::from_iter(other_scanners);
     let mut scanner_positions: Vec<Point> = Vec::new();
 
-    while !remaining_fields_queue.is_empty() {
-        let compare_field = remaining_fields_queue.pop_front().unwrap();
-        let maybe_scanner_position = reference_field.overlaps(compare_field);
-        if maybe_scanner_position.is_none() {
-            remaining_fields_queue.push_back(compare_field);
+    while !remaining_scanners.is_empty() {
+        let compare_scanner = remaining_scanners.pop_front().unwrap();
+        let maybe_overlap = reference_scanner.check_overlap(compare_scanner);
+
+        if maybe_overlap.is_none() {
+            remaining_scanners.push_back(compare_scanner);
         } else {
-            let scanner_position = maybe_scanner_position.unwrap();
-            println!("found {} at {:?}", compare_field.label, &scanner_position);
+            let (scanner_position, scanner_orientation) = maybe_overlap.unwrap();
+            println!("found {} at {:?}", compare_scanner.label, &scanner_position);
+
+            let translated_scanner_beacons: Vec<Point> = scanner_orientation.beacons.iter().map(|op| op.translate(&scanner_position)).collect();
+            for other_point in translated_scanner_beacons.iter() {
+                if !reference_scanner.beacons.contains(&other_point) {
+                    reference_scanner.beacons.push(other_point.clone());
+                }
+            }
+
             scanner_positions.push(scanner_position);
         }
     }
 
-    println!("part 1 = {}", reference_field.points.len());
+    println!("part 1 = {}", reference_scanner.beacons.len());
 
     let mut max_distance = 0;
     for scanner_pos in scanner_positions.iter() {
@@ -45,31 +54,31 @@ fn align_scanners(input: &[String]) {
     println!("part 2 = {}", max_distance);
 }
 
-fn parse_input(input: &[String]) -> Vec<Field> {
-    let mut fields: Vec<Field> = Vec::new();
+fn parse_input(input: &[String]) -> Vec<Scanner> {
+    let mut scanners: Vec<Scanner> = Vec::new();
 
     for line in input {
         if line.starts_with("---") {
-            fields.push(Field { label: line.replace("---", "").trim().to_string(), points: Vec::new() })
+            scanners.push(Scanner { label: line.replace("---", "").trim().to_string(), beacons: Vec::new() })
         } else if line.is_empty() {
             continue;
         } else {
-            let current_field: &mut Field = fields.last_mut().unwrap();
-            current_field.points.push(Point::parse(line));
+            let current_scanner: &mut Scanner = scanners.last_mut().unwrap();
+            current_scanner.beacons.push(Point::parse(line));
         }
     }
     
-    fields
+    scanners
 }
 
 #[derive(Debug)]
-struct Field {
+struct Scanner {
     label: String,
-    points: Vec<Point>
+    beacons: Vec<Point>
 }
 
-impl Field {
-    fn rotations(&self) -> Vec<Field> {
+impl Scanner {
+    fn rotations(&self) -> Vec<Scanner> {
         let mut rotations = Vec::with_capacity(24);
 
         rotations.push(self.rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])); // identity
@@ -105,34 +114,22 @@ impl Field {
         rotations
     }
 
-    fn rotate(&self, matrix: [[i32; 3]; 3]) -> Field {
-        Field { 
+    fn rotate(&self, matrix: [[i32; 3]; 3]) -> Scanner {
+        Scanner { 
             label: self.label.clone(), 
-            points: self.points.iter().map(|p| p.rotate(matrix)).collect() 
+            beacons: self.beacons.iter().map(|p| p.rotate(matrix)).collect() 
         }
     }
 
-    fn overlaps(&mut self, other: &Field) -> Option<Point> {
-        for ref_point in self.points.iter() {
-            for other_rotation in other.rotations() {
-                for other_ref_point in other_rotation.points.iter() {
-                    let offset_point = ref_point.find_offset(other_ref_point);
-                    let translated_other_points: Vec<Point> = other_rotation.points.iter().map(|op| op.translate(&offset_point)).collect();
-
-                    let mut overlaps: Vec<Point> = Vec::new();
-                    for other_point in translated_other_points.iter() {
-                        if self.points.contains(&other_point) {
-                            overlaps.push(other_point.clone());
-                        }
-                    }
-
-                    if overlaps.len() >= 12 {
-                        for other_point in translated_other_points.iter() {
-                            if !self.points.contains(&other_point) {
-                                self.points.push(other_point.clone());
-                            }
-                        }
-                        return Some(offset_point);
+    fn check_overlap(&mut self, scanner: &Scanner) -> Option<(Point, Scanner)> {
+        for scanner_orientation in scanner.rotations() {
+            for scanner_ref_point in scanner_orientation.beacons.iter() {
+                for self_ref_point in self.beacons.iter() {
+                    let offset_point = self_ref_point.find_offset(scanner_ref_point);
+                    let translated_scanner_points: Vec<Point> = scanner_orientation.beacons.iter().map(|op| op.translate(&offset_point)).collect();
+                    let overlapping_beacons: Vec<&Point> = translated_scanner_points.iter().filter(|tp| self.beacons.contains(tp)).collect();
+                    if overlapping_beacons.len() >= 12 {
+                        return Some((offset_point, scanner_orientation));
                     }
                 }
             }
